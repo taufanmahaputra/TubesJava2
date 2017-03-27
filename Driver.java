@@ -1,3 +1,6 @@
+import java.util.*;
+import java.io.*;
+
 public class Driver {
   public void ViewMap (Zoo Z){
     for(int i = 0; i < Z.height; i++){
@@ -19,43 +22,70 @@ public class Driver {
     }
   }
 
-
-  public void TourZoo(Zoo Z, int startx, int starty, String str)
-  {  
-    System.out.println ("Ini : " << str << endl;
+  public void TourZoo(Zoo Z, int startx, int starty, String str){  
+    System.out.println ("Ini : " + str);
     int i=0;
     int posX, posY;
     char x;
     posX = startx; posY = starty;
     DisplayInteractAround(Z, posX, posY);
-    while(i<str.length()){
-     Gerak(Z);
-     x = 'a';
-     if(str[i] == 'U'){
-    posX--;
-    DisplayInteractAround(Z,posX,posY);
-     } else
-     if(str[i] == 'D'){
-    posX++;
-    DisplayInteractAround(Z,posX,posY);
-     } else
-     if(str[i] == 'R'){
-    posY++;
-    DisplayInteractAround(Z,posX,posY);
-     } else
-     if(str[i] == 'L'){
-    posY--;
-    DisplayInteractAround(Z,posX,posY);
+    while(i < str.length()){
+      Gerak(Z);
+      x = 'a';
+      if(str.charAt(i) == 'U'){
+        posX--;
+        DisplayInteractAround(Z,posX,posY);
+      } else if(str.charAt(i) == 'D'){
+        posX++;
+        DisplayInteractAround(Z,posX,posY);
+     } else if(str.charAt(i) == 'R'){
+        posY++;
+        DisplayInteractAround(Z,posX,posY);
+     } else if(str.charAt(i) == 'L'){
+        posY--;
+        DisplayInteractAround(Z,posX,posY);
      }
       
-      do{
-          ViewMap(Z);
-    System.out.println << "Press X to continue..." << endl;
-          cin >> x;
-    if( x == 'X' ) i++;
-      }
-      while(x != 'X');
+    do{
+        ViewMap(Z);
+        System.out.println ("Press X to continue...");
+        Scanner s = new Scanner(System.in);
+        x = s.next().charAt(0);
+        if( x == 'X' ) i++;
+      } while(x != 'X');
     }
+  }
+  
+  public void Gerak(Zoo Z){
+    Random random = new Random();
+    for (int i = 0; i < 33; i++){ 
+      for (int j = 0;j < Z.kandang[i].GetNumAnimal(); j++){ 
+          int batasRandom = Z.kandang[i].GetLuas();
+          int temp = random.nextInt(batasRandom); // menggenerate angka random, mungkin masih salah 
+          Z.kandang[i].hewan[j].SetPosX(Z.kandang[i].x[temp]); 
+          Z.kandang[i].hewan[j].SetPosY(Z.kandang[i].y[temp]); 
+      } 
+    } 
+  }
+
+
+  public void DisplayInteractAround(Zoo Z,int posX, int posY){
+    int i= 0;
+    while(i < Z.sumAnimal){
+      if( (Z.daftarBinatang[i].GetPosX() == posX+1) && (Z.daftarBinatang[i].GetPosY() == posY)){
+        Z.daftarBinatang[i].PrintSuara();
+      }
+      if( (Z.daftarBinatang[i].GetPosX() == posX-1) && (Z.daftarBinatang[i].GetPosY() == posY)){
+        Z.daftarBinatang[i].PrintSuara();
+      }
+      if( (Z.daftarBinatang[i].GetPosX() == posX) && (Z.daftarBinatang[i].GetPosY() == posY+1)){
+        Z.daftarBinatang[i].PrintSuara();
+      }
+      if( (Z.daftarBinatang[i].GetPosX() == posX) && (Z.daftarBinatang[i].GetPosY() == posY-1)){
+        Z.daftarBinatang[i].PrintSuara();
+      }
+      i++;
+    } 
   }
 
   public void DisplayMap (Zoo Z, int x, int y){
@@ -63,18 +93,51 @@ public class Driver {
         for (int j = 0; j < y; j++) {
         boolean cek = false;
         int k = 0;
-            while ((!cek) && (k < Z.sumAnimal)){
-                if ((i == Z.daftarBinatang[k].GetPosX()) && (j == Z.daftarBinatang[k].GetPosY()))   {
-                    cek = true;
-                    Z.daftarBinatang[k].Render();
-                } k++;
-            }
+        while ((!cek) && (k < Z.sumAnimal)){
+          if ((i == Z.daftarBinatang[k].GetPosX()) && (j == Z.daftarBinatang[k].GetPosY()))   {
+            cek = true;
+            Z.daftarBinatang[k].Render();
+            } k++;
+         }
  
         if (!cek) {
-                Z.kotak[i][j].Render();
-            }
+           Z.kotak[i][j].Render();
+         }
         }
     System.out.println();
+    }
+  }
+  
+  public void GenerateRoute (Zoo Z, boolean [][] matriksb, int x, int y, int finishx, int finishy, int height, int width, boolean finished, Stack s, String str) {
+    if ((x == finishx) && (y == finishy)) {
+      String dataoutput = "";
+      int lengthoutput = 0;
+      finished = true;
+      while (!s.empty()){
+        dataoutput += s.peek();
+        lengthoutput++;
+        s.pop();
+      }
+      for (int i = lengthoutput - 1; i >= 0; i--){
+        str += dataoutput.charAt(i);
+      }
+    } else {
+      matriksb[x][y] = true;
+      if (((x + 1 < height) && ((Z.kotak[x+1][y].GetPembeda() == '|') || ((x + 1 == finishx) && (y == finishy))) && !matriksb[x+1][y] && !finished ) ){
+        s.push('D');
+        GenerateRoute (Z, matriksb, x + 1, y, finishx, finishy, height, width, finished, s, str);
+      }if ((x - 1 >= 0) && ((Z.kotak[x-1][y].GetPembeda() == '|') || ((x - 1 == finishx) && (y == finishy)) ) && !matriksb[x-1][y] && !finished) {
+        s.push('U');
+        GenerateRoute (Z,matriksb, x - 1, y, finishx, finishy, height, width, finished, s, str);
+      }if ((y - 1 >= 0) && ((Z.kotak[x][y-1].GetPembeda() == '|') || ((x == finishx) && (y - 1 == finishy))) && !matriksb[x][y-1] && !finished) {       
+        s.push('L');
+        GenerateRoute (Z,matriksb, x, y - 1, finishx, finishy, height, width, finished, s, str);
+      }if ((y + 1 < width) && ((Z.kotak[x][y+1].GetPembeda() == '|') || ((x == finishx) && (y + 1 == finishy))) && !matriksb[x][y+1] && !finished) {         
+        s.push('R');
+        GenerateRoute (Z,matriksb, x, y+1, finishx, finishy, height, width,finished,s,str);
+      }
+      matriksb[x][y] = false;
+      s.pop();
     }
   }
 
@@ -84,7 +147,7 @@ public class Driver {
       System.out.println("+++++++++++++++++++++++++++++++++++++++++++++");
       System.out.println ("Nama                   :");
         if (Z.daftarBinatang[i].kodeBinatang == 'U')
-            System.out.println (("Ular");
+            System.out.println("Ular");
         else if (Z.daftarBinatang[i].kodeBinatang == 'c')
             System.out.println ("Cupang" );
         else if (Z.daftarBinatang[i].kodeBinatang == 't')
@@ -140,7 +203,7 @@ public class Driver {
             System.out.println ( "Amfibi " );
  
  
-        System.out.println ("Jenis Makanan          :" ;
+        System.out.println ("Jenis Makanan          :");
         if (Z.daftarBinatang[i].jenisMakanan == '0')
             System.out.println ( "Karnivora" );
         else if (Z.daftarBinatang[i].jenisMakanan == '1')
@@ -181,4 +244,3 @@ public class Driver {
 
 //end class Driver
 //
-}
